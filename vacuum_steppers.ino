@@ -1,34 +1,32 @@
+#include "HardwareSerial.h"
 #include <Arduino.h>
 #include <avr/io.h>
 #include <AccelStepper.h>
 #include <avr/wdt.h>
 
 //First stepper, constant rotation
-constexpr uint8_t S1_PIN = PB5;
-constexpr uint8_t S1_DIR = PB4;
+constexpr uint8_t s1_dir = 13;
+constexpr uint8_t s1_pin = 12;
 
-AccelStepper S1{AccelStepper::DRIVER, S1_PIN, S1_DIR};
+AccelStepper S1{AccelStepper::DRIVER, s1_pin, s1_dir};
 
 //Second stepper, accerlating
-constexpr uint8_t S2_PIN = PB3;
-constexpr uint8_t S2_DIR = PB2;
+constexpr uint8_t s2_dir = 11;
+constexpr uint8_t s2_pin = 10;
 
-AccelStepper S2{AccelStepper::DRIVER, S2_PIN, S2_DIR};
+AccelStepper S2{AccelStepper::DRIVER, s2_pin, s2_dir};
 
 //Global variables placeholders for serial data. All speeds/accelerations are in steps/second.
-long s1_max_speed      = 0;
-long s1_speed          = 0;
+float s1_max_speed      = 0;
+float s1_speed          = 0;
 
-long s2_max_speed      = 0;
-long s2_acceleration   = 0;
+float s2_max_speed      = 0;
+float s2_acceleration   = 0;
+
 long s2_final_position = 0;
 
-//Safety check to ensure that all serial information is received.
-//The final serial input must be -1 so that check = -1. If check == -1 is false, then resetBoard() is called.
-int check = 0;
-
 void resetBoard() {
-	wdt_enable(WDTO_500MS);
+	wdt_enable(WDTO_250MS);
 	while(true){
 
 	}
@@ -36,35 +34,53 @@ void resetBoard() {
 
 int main() {
 
+	wdt_disable();
+
+	//Initialize serial
 	init();
 	Serial.begin(9600);
 	Serial.println("System ready. Awaiting inputs...");
 
-	//Wait for serial parameters to arrive
-	while(Serial.available() == 0) {
-
+	//Wait for only our specific "u ... -1" serial parameters to arrive
+	while(true) {
+		if(Serial.available() > 0) {
+			
+			char check = Serial.peek();
+			if (check == 'u') {
+				break;
+			
+			} else {
+				Serial.read();
+			}
+		}
 	}
 
-	//The serial will provide a list of ints in the following order:
-	s1_max_speed      = Serial.parseInt();
-	s1_speed          = Serial.parseInt();
-	s2_max_speed      = Serial.parseInt();
-	s2_acceleration   = Serial.parseInt();
+	//The serial data must be provided in the order below. The first item must be the char 'u' and 
+	//the final item must be the int -1. These are used to check that serial communication was successful.
+
+	char first_item = Serial.read();
+
+	s1_max_speed      = Serial.parseFloat();
+	s1_speed          = Serial.parseFloat();
+	s2_max_speed      = Serial.parseFloat();
+	s2_acceleration   = Serial.parseFloat();
 	s2_final_position = Serial.parseInt();
-	check             = Serial.parseInt(); //Sets check = -1
-
-	//Ensures that all serial parameters were received
-	if (check != -1) {
-		Serial.println("ERROR: Missing serial parameters. Please try again.");
-		resetBoard();
-	}
 	
-	Serial.println("Inputs received! Setting parameters...");
+	int last_item = Serial.parseInt();
+
+        if (first_item != 'u' || last_item != -1) {
+          Serial.println("There was an error with the serial communication. "
+                         "Please try again.");
+          resetBoard();
+        }
+
+        Serial.println("Inputs received! Setting parameters...");
 
 	//Set the motors with their parameters
 	S1.setMaxSpeed(s1_max_speed);
 	S1.setSpeed(s1_speed);
 
+	S2.setCurrentPosition(0);
 	S2.setMaxSpeed(s2_max_speed);
 	S2.setAcceleration(s2_acceleration);
 	S2.moveTo(s2_final_position);
