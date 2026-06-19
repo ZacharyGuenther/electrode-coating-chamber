@@ -1,8 +1,20 @@
-build/
+# Project root directory
+
 .vscode/
 
-*.o
-*.a
-*.so
-*.dylib
-*.exe
+# Arduino/C++ arduino-stepper-software folder
+
+firmware/build/
+
+firmware/*.o
+firmware/*.a
+firmware/*.so
+firmware/*.dylib
+firmware/*.exe
+
+# Python gui folder
+
+gui/.venv/
+
+gui/__pycache__
+gui/*.pyc
