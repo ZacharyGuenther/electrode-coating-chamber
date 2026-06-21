@@ -16,5 +16,5 @@ firmware/*.exe
 
 gui/.venv/
 
-gui/__pycache__
-gui/*.pyc
+gui/src/__pycache__
+gui/src/*.pyc
