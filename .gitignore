@@ -5,6 +5,7 @@
 # Arduino/C++ arduino-stepper-software folder
 
 firmware/build/
+firmware/.cache/
 
 firmware/*.o
 firmware/*.a
