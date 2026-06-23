@@ -1,7 +1,7 @@
 [project]
-name = "Vacuum_Steppers_GUI"
+name = "electrode-coating-chamber"
 version = "0.1.0"
-description = "The GUI component of the two stepper system of the Electrode chamber. Companion to ______"
+description = "The GUI and Serial Monitor component of the two stepper system of the Electrode chamber."
 readme = "README.md"
 requires-python = ">=3.10"
 
