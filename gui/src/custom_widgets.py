@@ -49,7 +49,6 @@ class BaseFlashButton(ttk.Button):
         _ = self.configure(style="Custom.TButton")
         self._timer_id = None
 
-
 class BaseToggleButton(ttk.Button):
 
     off_text: str
@@ -105,7 +104,6 @@ class BaseToggleButton(ttk.Button):
         _ = self.configure(style="onDelay.TButton", text=self.on_text)
         self._timer_id = None
 
-
 # COMPOSITE WIDGETS
 
 class LabelEntryButton(tk.Frame):
@@ -148,12 +146,10 @@ class LabelEntryButton(tk.Frame):
             self.entry.insert(index=0, string="Invalid number!")
             return "invalid"
 
-
-class OnOffToggleNum(BaseToggleButton):
+class OnOffToggle(BaseToggleButton):
 
     def __init__(self, master: tk.Misc, **kwargs: object) -> None:
         super().__init__(master=master, off_text='Off', on_text='On', **kwargs)
-
 
 class BooleanRadios(tk.Frame):
     
@@ -180,3 +176,30 @@ class BooleanRadios(tk.Frame):
             master=self, text=self.right_text, value=-1, variable=self.dir_multiplier
         )
         self.right_radio.grid(column=2, row=1, padx=5) 
+
+class HomeAndToggle(tk.Frame):
+    def __init__(self, parent: tk.Misc, **kwargs: object) -> None:
+        super().__init__(master=parent, **kwargs)  # pyright: ignore[reportArgumentType]
+        
+        self.set_home_button: BaseFlashButton = BaseFlashButton(master=self, text='Set Home')
+        self.set_home_button.grid(column=1, row=1)
+
+        self.go_home_button: BaseFlashButton = BaseFlashButton(master=self, text='Go Home')
+        self.go_home_button.grid(column=2, row=1)
+
+        self.toggle_button: BaseToggleButton = OnOffToggle(master=self)
+        self.toggle_button.grid(column=3, row=1)
+
+class MoveAndDir(tk.Frame):
+    def __init__(self, parent: tk.Misc, **kwargs: object) -> None:
+        super().__init__(master=parent, **kwargs) # pyright: ignore[reportArgumentType]
+
+        self.move_widget: LabelEntryButton = LabelEntryButton(
+            parent=self, label_text='Move (steps)', button_text='Send'
+            )
+        self.move_widget.pack(pady=5)
+
+        self.direction_radios: BooleanRadios = BooleanRadios(
+            parent=self, left_text='In', right_text='Out'
+            )
+        self.direction_radios.pack(pady=5)
