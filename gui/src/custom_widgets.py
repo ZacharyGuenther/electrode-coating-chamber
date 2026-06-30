@@ -4,86 +4,100 @@ from typing import Literal
 
 # BASE COMPONENTS
 
+
 class BaseFlashButton(ttk.Button):
-  
     _timer_id: str | None
     _delay_ms: int
 
-    def __init__(self, master: tk.Misc, flash_timer: int = 1250, **kwargs: object) -> None:
-        
+    def __init__(
+        self, master: tk.Misc, flash_timer: int = 1250, **kwargs: object
+    ) -> None:
         user_command: object = kwargs.pop("command", None)
-        
+
         super().__init__(master=master, style="Custom.TButton", **kwargs)  # pyright: ignore[reportArgumentType]
-        
+
         self._timer_id = None
         self._delay_ms = flash_timer
         self._setup_styles()
-        
+
         _ = self.configure(command=lambda: self._handle_click(user_command))
 
     def _setup_styles(self) -> None:
         style: ttk.Style = ttk.Style()
         style.theme_use("alt")
-        
+
         style.configure("Custom.TButton", background="darkred", foreground="white")
         _ = style.map("Custom.TButton", background=[("active", "red")])
 
         style.configure("Success.TButton", background="green", foreground="white")
-        _ = style.map("Success.TButton", background=[("active", "green")], foreground=[("active", "white")])
+        _ = style.map(
+            "Success.TButton",
+            background=[("active", "green")],
+            foreground=[("active", "white")],
+        )
 
     def _handle_click(self, user_command: object) -> None:
         if self._timer_id:
             self.after_cancel(id=self._timer_id)
-            
-        
+
         if callable(user_command):
             result: object = user_command()
 
             if result == "invalid":
                 return
 
-        _ = self.configure(style="Success.TButton")    
+        _ = self.configure(style="Success.TButton")
         self._timer_id = self.after(ms=self._delay_ms, func=self._reset_style)
 
     def _reset_style(self) -> None:
         _ = self.configure(style="Custom.TButton")
         self._timer_id = None
 
-class BaseToggleButton(ttk.Button):
 
+class BaseToggleButton(ttk.Button):
     off_text: str
     on_text: str
     _is_off: bool
     _timer_id: str | None
     _delay_ms: int
 
-    def __init__(self, master: tk.Misc, off_text: str, on_text: str, **kwargs: object) -> None:
+    def __init__(
+        self, master: tk.Misc, off_text: str, on_text: str, **kwargs: object
+    ) -> None:
 
         user_command: object = kwargs.pop("command", None)
-        
+
         super().__init__(master=master, text=off_text, style="off.TButton", **kwargs)  # pyright: ignore[reportArgumentType]
-        
+
         self.off_text = off_text
         self.on_text = on_text
         self._is_off = True
         self._timer_id = None
         self._delay_ms = 1250
         self._setup_styles()
-        
+
         _ = self.configure(command=lambda: self._handle_toggle(user_command))
 
     def _setup_styles(self) -> None:
         style: ttk.Style = ttk.Style()
         style.theme_use("alt")
-       
+
         style.configure("off.TButton", background="darkred", foreground="white")
         _ = style.map("off.TButton", background=[("active", "red")])
 
         style.configure("on.TButton", background="green", foreground="white")
-        _ = style.map("on.TButton", background=[("active", "green")], foreground=[("active", "white")])
+        _ = style.map(
+            "on.TButton",
+            background=[("active", "green")],
+            foreground=[("active", "white")],
+        )
 
         style.configure("onDelay.TButton", background="green", foreground="white")
-        _ = style.map("onDelay.TButton", background=[("active", "darkgreen")], foreground=[("active", "white")])
+        _ = style.map(
+            "onDelay.TButton",
+            background=[("active", "darkgreen")],
+            foreground=[("active", "white")],
+        )
 
     def _handle_toggle(self, user_command: object) -> None:
         if self._timer_id:
@@ -94,7 +108,7 @@ class BaseToggleButton(ttk.Button):
             self._timer_id = self.after(ms=self._delay_ms, func=self._settle_on_style)
         else:
             _ = self.configure(style="off.TButton", text=self.off_text)
-            
+
         self._is_off = not self._is_off
 
         if callable(user_command):
@@ -104,16 +118,19 @@ class BaseToggleButton(ttk.Button):
         _ = self.configure(style="onDelay.TButton", text=self.on_text)
         self._timer_id = None
 
+
 # COMPOSITE WIDGETS
 
+
 class LabelEntryButton(tk.Frame):
-  
     label: ttk.Label
     entry: ttk.Entry
     button: BaseFlashButton
     value: float
 
-    def __init__(self, parent: tk.Misc, label_text: str, button_text: str, **kwargs: object) -> None:
+    def __init__(
+        self, parent: tk.Misc, label_text: str, button_text: str, **kwargs: object
+    ) -> None:
         super().__init__(master=parent, **kwargs)  # pyright: ignore[reportArgumentType]
         self.value = 0.0
 
@@ -125,9 +142,7 @@ class LabelEntryButton(tk.Frame):
         _ = self.entry.bind("<FocusIn>", self._select_all)
 
         self.button = BaseFlashButton(
-            master=self,
-            text=button_text,
-            command=self._pull_entry_data
+            master=self, text=button_text, command=self._pull_entry_data
         )
         self.button.grid(column=3, row=1)
 
@@ -146,21 +161,22 @@ class LabelEntryButton(tk.Frame):
             self.entry.insert(index=0, string="Invalid number!")
             return "invalid"
 
-class OnOffToggle(BaseToggleButton):
 
+class OnOffToggle(BaseToggleButton):
     def __init__(self, master: tk.Misc, **kwargs: object) -> None:
-        super().__init__(master=master, off_text='Off', on_text='On', **kwargs)
+        super().__init__(master=master, off_text="Off", on_text="On", **kwargs)
+
 
 class BooleanRadios(tk.Frame):
-    
     dir_multiplier: tk.IntVar
     left_radio: ttk.Radiobutton
     left_text: str
     right_radio: ttk.Radiobutton
     right_text: str
 
-
-    def __init__(self, parent: tk.Misc, left_text: str, right_text: str, **kwargs: object) -> None:
+    def __init__(
+        self, parent: tk.Misc, left_text: str, right_text: str, **kwargs: object
+    ) -> None:
         super().__init__(master=parent, **kwargs)  # pyright: ignore[reportArgumentType]
 
         self.left_text = left_text
@@ -175,31 +191,37 @@ class BooleanRadios(tk.Frame):
         self.right_radio = ttk.Radiobutton(
             master=self, text=self.right_text, value=-1, variable=self.dir_multiplier
         )
-        self.right_radio.grid(column=2, row=1, padx=5) 
+        self.right_radio.grid(column=2, row=1, padx=5)
 
-class HomeAndToggle(tk.Frame):
+
+class HomeAndToggle(tk.Frame):  # remove
     def __init__(self, parent: tk.Misc, **kwargs: object) -> None:
         super().__init__(master=parent, **kwargs)  # pyright: ignore[reportArgumentType]
-        
-        self.set_home_button: BaseFlashButton = BaseFlashButton(master=self, text='Set Home')
-        self.set_home_button.grid(column=1, row=1)
 
-        self.go_home_button: BaseFlashButton = BaseFlashButton(master=self, text='Go Home')
-        self.go_home_button.grid(column=2, row=1)
+        self.set_home_button: BaseFlashButton = BaseFlashButton(
+            master=self, text="Set Home"
+        )
+        self.set_home_button.grid(column=1, row=1, padx=5)
+
+        self.go_home_button: BaseFlashButton = BaseFlashButton(
+            master=self, text="Go Home"
+        )
+        self.go_home_button.grid(column=2, row=1, padx=5)
 
         self.toggle_button: BaseToggleButton = OnOffToggle(master=self)
-        self.toggle_button.grid(column=3, row=1)
+        self.toggle_button.grid(column=3, row=1, padx=5)
+
 
 class MoveAndDir(tk.Frame):
     def __init__(self, parent: tk.Misc, **kwargs: object) -> None:
-        super().__init__(master=parent, **kwargs) # pyright: ignore[reportArgumentType]
+        super().__init__(master=parent, **kwargs)  # pyright: ignore[reportArgumentType]
 
         self.move_widget: LabelEntryButton = LabelEntryButton(
-            parent=self, label_text='Move (steps)', button_text='Send'
-            )
+            parent=self, label_text="Move (steps)", button_text="Send"
+        )
         self.move_widget.pack(pady=5)
 
         self.direction_radios: BooleanRadios = BooleanRadios(
-            parent=self, left_text='In', right_text='Out'
-            )
+            parent=self, left_text="In", right_text="Out"
+        )
         self.direction_radios.pack(pady=5)
