@@ -2,7 +2,9 @@ import tkinter as tk
 from tkinter import Tk, ttk
 
 from gui.src import custom_widgets as cw
+from gui.src.serial_monitor import serial_worker
 
+ser: serial_worker = serial_worker(baudrate=115200, timeout=1)
 root: Tk = tk.Tk()
 root.title("Electrode Chamber Control Interface")
 
@@ -25,21 +27,65 @@ notebook.pack(pady=10, expand=True, fill="both")
 
 linear_tab: ttk.Frame = ttk.Frame(master=notebook)
 
-constant_speed: cw.LabelEntryButton = cw.LabelEntryButton(
-    parent=linear_tab, label_text="Angular Speed (RPM)", button_text="Send"
+linear_max_speed: cw.LabelEntryButton = cw.LabelEntryButton(
+    parent=linear_tab, label_text="Max Speed (step/s)", button_text="Send"
 )
-constant_speed.pack(pady=20)
+linear_max_speed.pack(pady=5)
 
-constant_speed_toggle: cw.OnOffToggleNum = cw.OnOffToggleNum(master=linear_tab)
-constant_speed_toggle.pack(pady=20)
+acceleration: cw.LabelEntryButton = cw.LabelEntryButton(
+    parent=linear_tab, label_text="Acceleration (step/s^2)", button_text="Send"
+)
+acceleration.pack(pady=5)
+
+final_position: cw.LabelEntryButton = cw.LabelEntryButton(
+    parent=linear_tab, label_text="Final Postion (step)", button_text="Send"
+)
+final_position.pack(pady=10)
+
+move_to: cw.LabelEntryButton = cw.LabelEntryButton(
+    parent=linear_tab, label_text="Move to (steps)", button_text="Send"
+)
+move_to.pack(pady=10)
+
+move: cw.LabelEntryButton = cw.LabelEntryButton(
+    parent=linear_tab, label_text="Move (steps)", button_text="Send"
+)
+move.pack(pady=5)
+
+lin_direction: cw.BooleanRadios = cw.BooleanRadios(
+    parent=linear_tab, left_text="In", right_text="Out"
+)
+lin_direction.pack(pady=5)
+
+home_toggle_buttons: cw.HomeAndToggle = cw.HomeAndToggle(parent=linear_tab)
+home_toggle_buttons.pack(pady=5)
+
 
 rotation_tab: ttk.Frame = ttk.Frame(master=notebook)
+
+constant_speed: cw.LabelEntryButton = cw.LabelEntryButton(
+    parent=rotation_tab, label_text="Angular Speed (RPM)", button_text="Send"
+)
+constant_speed.pack(pady=5)
+
+constant_speed_toggle: cw.OnOffToggle = cw.OnOffToggle(master=rotation_tab)
+constant_speed_toggle.pack(pady=5)
+
+rot_direction: cw.BooleanRadios = cw.BooleanRadios(
+    parent=rotation_tab, left_text="In", right_text="Out"
+)
+rot_direction.pack(pady=5)
+
+
 mirror_tab: ttk.Frame = ttk.Frame(master=notebook)
+
+
 serial_tab: ttk.Frame = ttk.Frame(master=notebook)
+
 
 notebook.add(child=linear_tab, text="Target Linear Motion")
 notebook.add(child=rotation_tab, text="Substrate Rotation")
-notebook.add(child=mirror_tab, text="Laser Mirror Planar Motion")
+notebook.add(child=mirror_tab, text="Mirror Planar Motion")
 notebook.add(child=serial_tab, text="Serial Connection")
 
 try:
