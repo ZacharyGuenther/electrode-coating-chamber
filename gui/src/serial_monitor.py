@@ -5,6 +5,7 @@ from serial.tools.list_ports_common import ListPortInfo
 
 class serial_worker(serial.Serial):
     port_devices: list[str]
+    command_string: str
 
     def __init__(self, **kwargs) -> None:  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType]
         super().__init__(**kwargs)  # pyright: ignore[reportUnknownArgumentType]
@@ -20,3 +21,14 @@ class serial_worker(serial.Serial):
         self.close()
         self.port: str = selected_port
         self.open()
+
+    def send_cmd(self, prefix: str, value: float) -> None:
+        if self.is_open:
+            self.command_string = f"{prefix}={value}\n"
+            try:
+                _ = self.write(self.command_string.encode(encoding="ascii"))
+                print(f"Sent via serial: {self.command_string.strip()}")
+            except serial.SerialException as e:
+                print(f"Failed to send data: {e}")
+        else:
+            print("Serial port is closed.")
