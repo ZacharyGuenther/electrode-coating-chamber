@@ -225,3 +225,54 @@ class MoveAndDir(tk.Frame):
             parent=self, left_text="In", right_text="Out"
         )
         self.direction_radios.pack(pady=5)
+
+
+# NOTEBOOK TABS
+
+
+notebook: ttk.Notebook = ttk.Notebook()
+notebook.pack(pady=10, expand=True, fill="both")
+
+
+class linear_tab(ttk.Frame):
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__(**kwargs)  # pyright: ignore[reportArgumentType]
+
+        self.linear_max_speed: LabelEntryButton = LabelEntryButton(
+            parent=self, label_text="Max Speed (step/s)", button_text="Send"
+        )
+        self.linear_max_speed.pack(pady=5)
+
+        self.acceleration: LabelEntryButton = LabelEntryButton(
+            parent=self, label_text="Acceleration (step/s^2)", button_text="Send"
+        )
+        self.acceleration.pack(pady=5)
+
+        self.final_position: LabelEntryButton = LabelEntryButton(
+            parent=self, label_text="Final Postion (step)", button_text="Send"
+        )
+        self.final_position.pack(pady=10)
+
+        self.move_to: LabelEntryButton = LabelEntryButton(
+            parent=self, label_text="Move to (steps)", button_text="Send"
+        )
+        self.move_to.pack(pady=10)
+
+        self.move: LabelEntryButton = LabelEntryButton(
+            parent=self, label_text="Move (steps)", button_text="Send"
+        )
+        self.move.pack(pady=5)
+
+        self.lin_direction: BooleanRadios = BooleanRadios(
+            parent=self, left_text="In", right_text="Out"
+        )
+        self.lin_direction.pack(pady=5)
+
+        self.home_toggle_buttons: HomeAndToggle = HomeAndToggle(parent=self)
+        self.home_toggle_buttons.pack(pady=5)
+
+
+class serial_tab(ttk.Frame):
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__(**kwargs)  # pyright: ignore[reportArgumentType]
+        pass
