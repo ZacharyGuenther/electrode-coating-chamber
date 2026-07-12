@@ -186,7 +186,7 @@ class BoolRadios(ttk.Frame):
             value=1,
             variable=self.dir_multiplier,
         )
-        self.lrad.grid(column=0, row=0)
+        self.lrad.grid(column=0, row=0, padx=10)
 
         self.rrad: ttk.Radiobutton = ttk.Radiobutton(
             master=self,
@@ -195,7 +195,7 @@ class BoolRadios(ttk.Frame):
             value=-1,
             variable=self.dir_multiplier,
         )
-        self.rrad.grid(column=1, row=0)
+        self.rrad.grid(column=1, row=0, padx=10)
 
     def _on_click(self) -> None:
         if self._callback:
