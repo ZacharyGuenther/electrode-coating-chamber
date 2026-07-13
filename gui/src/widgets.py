@@ -23,6 +23,8 @@ def setup_styles(master: tk.Misc) -> None:
     font: str = "Arial"
     brdr_sty: str = "thin"
 
+    master["bg"] = frm_bg
+
     style.configure("TRadiobutton", background=frm_bg, foreground=text, font=font)
     _ = style.map(
         "TRadiobutton",
@@ -71,10 +73,15 @@ def setup_styles(master: tk.Misc) -> None:
         selectbackground=[("focus", frm_bg), ("readonly", frm_bg)],
         selectforeground=[("focus", text), ("readonly", text)],
     )
-    master.option_add(pattern="*TCombobox*Listbox*background", value=ent_bg)  # pyright: ignore[reportUnknownMemberType]
-    master.option_add(pattern="*TCombobox*Listbox*foreground", value=text)  # pyright: ignore[reportUnknownMemberType]
-    master.option_add(pattern="*TCombobox*Listbox*selectBackground", value=lstbx_bg)  # pyright: ignore[reportUnknownMemberType]
-    master.option_add(pattern="*TCombobox*Listbox*selectForeground", value=text)  # pyright: ignore[reportUnknownMemberType]
+
+    combobox_listbox_options: dict[str, str] = {
+        "*TCombobox*Listbox*background": ent_bg,
+        "*TCombobox*Listbox*foreground": text,
+        "*TCombobox*Listbox*selectBackground": lstbx_bg,
+        "*TCombobox*Listbox*selectForeground": text,
+    }
+    for pattern, value in combobox_listbox_options.items():
+        master.option_add(pattern, value)  # pyright: ignore[reportUnknownMemberType]
 
 
 ################################################
