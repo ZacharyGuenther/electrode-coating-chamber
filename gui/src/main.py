@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from gui.src.View import App
+from gui.src.view import View
 
 if __name__ == "__main__":
     root: tk.Tk = tk.Tk()
@@ -18,6 +18,6 @@ if __name__ == "__main__":
 
     root.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
 
-    view: App = App(master=root)
+    view: View = View(master=root)
 
     root.mainloop()

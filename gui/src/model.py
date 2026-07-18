@@ -1,7 +1,7 @@
 from queue import Queue
 
 
-class MotorControllerModel:
+class Model:
     def __init__(self, queue: Queue[str]) -> None:
         self.queue: Queue[str] = queue
 

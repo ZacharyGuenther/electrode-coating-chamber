@@ -141,7 +141,7 @@ class SerialTab(ttk.Frame):
 ################################################
 # Main App
 ################################################
-class App(ttk.Notebook):
+class View(ttk.Notebook):
     def __init__(self, master: tk.Misc) -> None:
         super().__init__(master=master)
         self.pack(fill="both", expand=True)

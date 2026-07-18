@@ -5,7 +5,7 @@ import serial.tools.list_ports
 from serial.tools.list_ports_common import ListPortInfo
 
 
-class SerialWorkerThread(threading.Thread):
+class SerialWorker(threading.Thread):
     def __init__(self) -> None:
         super().__init__(target=self._check_loop, daemon=True)
 
