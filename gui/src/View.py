@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import Widget, ttk
 
 from gui.src.widgets import (
     BoolRadios,
@@ -73,6 +73,10 @@ class LinearTab(ttk.Frame):
         self.param_frame.create(widget_data=param_config)
         self.param_frame.pack(expand=True)
 
+        temp_widgets: dict[str, Widget] = self.param_frame.components["abs_mov"]
+        for widget in temp_widgets.values():
+            widget.grid(pady=(30, 10))
+
         self.dir_rad: BoolRadios = BoolRadios(
             master=self.param_frame,
             left_text="Into Chamber",
@@ -80,15 +84,15 @@ class LinearTab(ttk.Frame):
         )
         self.dir_rad.grid(row=5, column=1, columnspan=2)
 
-        self.param_frame.components["rel_mov"]["label"].grid(
-            row=4, column=0, rowspan=2, sticky="ew", padx=5, pady=10
-        )
-        self.param_frame.components["rel_mov"]["button"].grid(
-            row=4, column=3, rowspan=2, sticky="ew", padx=5, pady=10
-        )
+        # self.param_frame.components["rel_mov"]["label"].grid(
+        #    row=4, column=0, rowspan=2, sticky="ew", padx=5, pady=10
+        # )
+        # self.param_frame.components["rel_mov"]["button"].grid(
+        #    row=4, column=3, rowspan=2, sticky="ew", padx=5, pady=10
+        # )
 
         self.state_frame: ttk.Frame = ttk.Frame(master=self)
-        self.state_frame.pack(side="bottom", pady=30)
+        self.state_frame.pack(side="bottom", pady=25)
 
         self.set_home_button: SendButton = SendButton(
             master=self.state_frame, text="Set Home"
