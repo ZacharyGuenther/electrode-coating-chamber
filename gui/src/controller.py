@@ -132,7 +132,7 @@ class Controller(ttk.Frame):
             return
 
         unit: str = unit_widget.selected_unit.get()
-        conv_factor: float = self.model.unit_conversions.get(unit, 1.0)
+        conv_factor: float = self.model.unit_conversions[motor].get(unit, 1.0)
 
         dir_mult: int = cast(int, getattr(self.model, f"{motor}_dir"))
 
@@ -148,7 +148,7 @@ class Controller(ttk.Frame):
             return
 
         unit: str = unit_widget.selected_unit.get()
-        conv_factor: float = self.model.unit_conversions.get(unit, 1.0)
+        conv_factor: float = self.model.unit_conversions[motor].get(unit, 1.0)
 
         final_value: float = raw_value * conv_factor
 

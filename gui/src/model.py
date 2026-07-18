@@ -1,9 +1,10 @@
-from queue import Queue
+from queue import Full, Queue
 
 
 class Model:
     def __init__(self, queue: Queue[str]) -> None:
         self.queue: Queue[str] = queue
+        self.available_ports: list[str] = []
 
         self._s1_max: float = 0.0
         self._s1_spd: float = 0.0
@@ -31,22 +32,35 @@ class Model:
         self.stgd_s2_mtp: int = 0
         self.stgd_s2_mta: int = 0
 
-        self.unit_conversions: dict[str, float] = {
-            "mm": 1,
-            "cm": 1,
-            "step": 1,
-            "RPM": 1,
-            "step/s": 1,
-            "RPM/s": 1,
-            "step/s\u00b2": 1,
+        self.S1_SPR: float = 200.0
+        self.S2_SPR: float = 400.0
+        self.S2_MMPR: float = 8.0
+
+        self.unit_conversions: dict[str, dict[str, float]] = {
+            "s1": {
+                "RPM": (1.0 / 60.0) * self.S1_SPR,
+                "step/s": 1.0,
+            },
+            "s2": {
+                "mm": self.S2_SPR / self.S2_MMPR,
+                "cm": (self.S2_SPR / self.S2_MMPR) * 10.0,
+                "step": 1.0,
+                "RPM": (1.0 / 60.0) * self.S2_SPR,
+                "step/s": 1.0,
+                "RPM/s": (1.0 / 60.0) * self.S2_SPR,
+                "step/s\u00b2": 1.0,
+            },
         }
 
     ################################################
     # Stepper 2 Properties
     ################################################
     def _send_to_queue(self, cmd_prefix: str, value: float | int) -> None:
-        arduino_cmd: str = f"{cmd_prefix}={value}\n"
-        self.queue.put(item=arduino_cmd)
+        try:
+            arduino_cmd: str = f"{cmd_prefix}={value}\n"
+            self.queue.put_nowait(item=arduino_cmd)
+        except Full:
+            print("Queue is full!")
 
     ################################################
     # Stepper 1 Properties

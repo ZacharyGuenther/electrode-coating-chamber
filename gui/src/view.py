@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import Widget, ttk
+from typing import Any, Callable
 
 from gui.src.widgets import (
     BoolRadios,
@@ -135,7 +136,36 @@ class MirrorTab(ttk.Frame):
 
 
 class SerialTab(ttk.Frame):
-    pass
+    def __init__(self, master: tk.Misc) -> None:
+        super().__init__(master=master)
+
+        _ = self.columnconfigure(index=0, weight=1)
+        _ = self.columnconfigure(index=1, weight=1)
+
+        self.port_var: tk.StringVar = tk.StringVar()
+        self.port_cb: ttk.Combobox = ttk.Combobox(
+            master=self,
+            textvariable=self.port_var,
+            state="normal",
+            font="Arial",
+            width=30,
+        )
+        self.port_cb.grid(row=0, column=0, columnspan=2, pady=(30, 10))
+
+        self.disconnect_btn: ttk.Button = ttk.Button(master=self, text="Disconnect")
+        self.disconnect_btn.grid(row=1, column=0, columnspan=2, pady=10)
+
+    def update_port_list(self, port_labels: list[str]) -> None:
+        current_values: list[Any] = list[Any](self.port_cb["values"])
+        if current_values != port_labels:
+            self.port_cb["values"] = port_labels
+
+    def bind_connect_events(self, callback: Callable[[str], None]) -> None:
+        def on_trigger(_event: tk.Event) -> None:
+            callback(self.port_var.get())
+
+        _ = self.port_cb.bind("<<ComboboxSelected>>", on_trigger)
+        _ = self.port_cb.bind("<Return>", on_trigger)
 
 
 ################################################
