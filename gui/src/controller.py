@@ -14,11 +14,15 @@ class Controller(ttk.Frame):
     def __init__(self, master: tk.Misc, view: View, model: Model) -> None:
         super().__init__(master=master)
 
-        self.queue: Queue[str] = Queue[str](maxsize=32)
-        self.thread: SerialWorker = SerialWorker()
+        self.inbox: Queue[str] = Queue[str](maxsize=32)
+        self.outbox: Queue[str] = Queue[str](maxsize=32)
+        self.thread: SerialWorker = SerialWorker(
+            inbox=self.inbox, outbox=self.outbox, model=model
+        )
 
-        self.model: Model = Model(queue=self.queue)
+        self.model: Model = Model(queue=self.outbox)
         self.view: View = View(master=self)
+        self.thread.start()
 
         self._bind_linear_tab()
         self._bind_rotation_tab()

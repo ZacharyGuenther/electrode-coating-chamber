@@ -16,10 +16,30 @@ class Model:
         self._s2_mta: int = 0
 
         self.s1_is_on: bool = False
-        self.s1_dir_multiplier: int = 1
+        self.s1_dir: int = 1
 
         self.s2_is_on: bool = False
-        self.s2_dir_multiplier: int = 1
+        self.s2_dir: int = 1
+
+        self.stgd_s1_max: float = 0.0
+        self.stgd_s1_spd: float = 0.0
+
+        self.stgd_s2_max: float = 0.0
+        self.stgd_s2_acc: float = 0.0
+        self.stgd_s2_end: int = 0
+        self.stgd_s2_mov: int = 0
+        self.stgd_s2_mtp: int = 0
+        self.stgd_s2_mta: int = 0
+
+        self.unit_conversions: dict[str, float] = {
+            "mm": 1,
+            "cm": 1,
+            "step": 1,
+            "RPM": 1,
+            "step/s": 1,
+            "RPM/s": 1,
+            "step/s\u00b2": 1,
+        }
 
     ################################################
     # Stepper 2 Properties

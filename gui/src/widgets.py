@@ -100,7 +100,7 @@ class SendButton(ttk.Button):
 
         self._delay_ms: int = delay_ms
         self._timer_id: str | None = None
-        self._callback: Callable[[str], None] | None = None
+        self._callback: Callable[..., None] | None = None
         self._companion: ttk.Entry | None = None
 
     def _on_click(self) -> None:
@@ -112,13 +112,16 @@ class SendButton(ttk.Button):
             ms=self._delay_ms, func=lambda: self.configure(style="TButton")
         )
 
-        if self._callback and self._companion:
-            self._callback(self._companion.get())
+        if self._callback:
+            if self._companion:
+                self._callback(self._companion.get())
+            else:
+                self._callback()
 
     def bind_companion(self, companion: ttk.Entry) -> None:
         self._companion = companion
 
-    def bind_callback(self, callback: Callable[[str], None]) -> None:
+    def bind_callback(self, callback: Callable[..., None]) -> None:
         self._callback = callback
 
 
