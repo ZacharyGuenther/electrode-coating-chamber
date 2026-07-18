@@ -45,7 +45,12 @@ def setup_styles(master: tk.Misc) -> None:
     style.configure("TLabel", background=bg, foreground=text, font=font)
 
     style.configure(
-        "TEntry", fieldbackground=ent_bg, foreground=text, font=font, bordercolor=ent_bg
+        "TEntry",
+        fieldbackground=ent_bg,
+        foreground=text,
+        font=font,
+        bordercolor=ent_bg,
+        insertcolor=text,
     )
 
     style.configure("TButton", background=base_btn_bg, foreground=text, font=font)
