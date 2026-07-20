@@ -33,7 +33,7 @@ class StepperMotor:
     mta: QueueProperty = QueueProperty(private_name="_mta")
 
     def __init__(
-        self, queue: Queue[str], prefix: str, spr: float = 0.0, spmm: float = 10000.0
+        self, queue: Queue[str], prefix: str, spr: float = 0.0, mmpr: float = 10000.0
     ) -> None:
         self.outbox: Queue[str] = queue
         self.prefix: str = prefix.upper()
@@ -61,8 +61,8 @@ class StepperMotor:
         # SPMM = steps per millimeter
         # MMPR = millimeter per revolution
         self.SPR: float = spr
-        self.SPMM: float = spmm
-        self.MMPR: float = self.SPR / self.SPMM
+        self.MMPR: float = mmpr
+        self.SPMM: float = self.SPR / self.MMPR
 
         self.conv_factors: dict[str, float] = {
             "mm": self.SPMM,
@@ -103,9 +103,7 @@ class Model:
         self._port_callback: Callable[[list[str]], None] | None = None
 
         self.s1: StepperMotor = StepperMotor(queue=queue, spr=200, prefix="S1")
-        self.s2: StepperMotor = StepperMotor(
-            queue=queue, spr=400, spmm=900, prefix="S2"
-        )
+        self.s2: StepperMotor = StepperMotor(queue=queue, spr=400, mmpr=60, prefix="S2")
 
     def bind_port_update(self, callback: Callable[[list[str]], None]) -> None:
         self._port_callback = callback
