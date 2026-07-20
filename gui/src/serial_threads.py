@@ -39,14 +39,14 @@ class SerialWorker(threading.Thread):
             if self.connection is not None and self.connection.is_open:
                 try:
                     if self.connection.in_waiting > 0:
-                        line_bytes: bytes = self.connection.readline()
-                        line_str: str = line_bytes.decode(
+                        incoming_bytes: bytes = self.connection.readline()
+                        incoming_str: str = incoming_bytes.decode(
                             encoding="ascii", errors="ignore"
                         ).strip()
 
-                        if line_str:
+                        if incoming_str:
                             try:
-                                self.inbox.put_nowait(item=line_str)
+                                self.inbox.put_nowait(item=incoming_str)
                             except Full:
                                 pass
 
@@ -65,11 +65,16 @@ class SerialWorker(threading.Thread):
             time.sleep(0.01)
 
     def _update_ports(self) -> None:
-        current_ports: list[ListPortInfo] = serial.tools.list_ports.comports()
-        device_list: list[str] = [port.device for port in current_ports]
-
-        if device_list != self.model.available_ports:
-            self.model.available_ports = device_list
+        all_ports: list[ListPortInfo] = serial.tools.list_ports.comports()
+        usb_ports: list[str] = []
+        for port in all_ports:
+            if port.vid is not None:
+                usb_ports = [port.device]
+        # Consider having this go to the inbox and having the controller set the values
+        # in Model. Shouldn't cause a race condition for now because the GUI is updated
+        # via a setter method of this variable.
+        if usb_ports != self.model.ports:
+            self.model.ports = usb_ports
 
     def stop(self) -> None:
         self._stop_event.set()

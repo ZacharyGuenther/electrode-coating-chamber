@@ -3,6 +3,17 @@ from tkinter import ttk
 from typing import Callable
 
 
+def bind_highlight_on_focus(widget: ttk.Entry | ttk.Combobox) -> None:
+    def _highlight() -> None:
+        widget.select_range(start=0, end=tk.END)
+        widget.icursor(index=tk.END)
+
+    def _on_focus(_event: "tk.Event[tk.Misc]") -> None:
+        _ = widget.after(ms=50, func=_highlight)
+
+    _ = widget.bind("<FocusIn>", _on_focus, add="+")
+
+
 ################################################
 # Global Styling
 ################################################
@@ -23,7 +34,8 @@ def setup_styles(master: tk.Misc) -> None:
     font: str = "Arial"
     brdr_sty: str = "thin"
 
-    master["bg"] = frm_bg
+    root: tk.Misc = master.winfo_toplevel()
+    _ = root.configure(bg=frm_bg)
 
     style.configure("TRadiobutton", background=frm_bg, foreground=text, font=font)
     _ = style.map(
@@ -70,13 +82,18 @@ def setup_styles(master: tk.Misc) -> None:
         relief=brdr_sty,
         bordercolor=ent_bg,
         font=font,
+        insertcolor=text,
     )
     _ = style.map(
         "TCombobox",
         background=[("active", ent_bg)],
-        fieldbackground=[("readonly", bg)],
-        selectbackground=[("focus", frm_bg), ("readonly", frm_bg)],
-        selectforeground=[("focus", text), ("readonly", text)],
+        fieldbackground=[("readonly", bg), ("!readonly", ent_bg)],
+        selectbackground=[
+            ("focus", frm_bg),
+            ("readonly", frm_bg),
+            ("!readonly", frm_bg),
+        ],
+        selectforeground=[("focus", text), ("readonly", text), ("!readonly", text)],
     )
 
     combobox_listbox_options: dict[str, str] = {
@@ -102,6 +119,7 @@ class SendButton(ttk.Button):
         self._timer_id: str | None = None
         self._callback: Callable[..., None] | None = None
         self._companion: ttk.Entry | None = None
+        self._units: ttk.Combobox | None = None
 
     def _on_click(self) -> None:
         if self._timer_id:
@@ -113,13 +131,16 @@ class SendButton(ttk.Button):
         )
 
         if self._callback:
-            if self._companion:
-                self._callback(self._companion.get())
+            if self._companion and self._units:
+                self._callback(self._companion.get(), self._units.get())
             else:
                 self._callback()
 
-    def bind_companion(self, companion: ttk.Entry) -> None:
+    def bind_companion(
+        self, companion: ttk.Entry, units: ttk.Combobox | None = None
+    ) -> None:
         self._companion = companion
+        self._units = units
 
     def bind_callback(self, callback: Callable[..., None]) -> None:
         self._callback = callback
@@ -176,15 +197,15 @@ class UnitsCombobox(ttk.Combobox):
             values=self.units,
         )
 
-        self._callback: Callable[[str], None] | None = None
-        _ = self.bind("<<ComboboxSelected>>", self._on_click)
+    #    self._callback: Callable[[str], None] | None = None
+    #    _ = self.bind("<<ComboboxSelected>>", self._on_click)
 
-    def _on_click(self, _event: tk.Event) -> None:
-        if self._callback:
-            self._callback(self.selected_unit.get())
+    # def _on_click(self, _event: tk.Event) -> None:
+    #    if self._callback:
+    #        self._callback(self.selected_unit.get())
 
-    def bind_callback(self, callback: Callable[[str], None]) -> None:
-        self._callback = callback
+    # def bind_callback(self, callback: Callable[[str], None]) -> None:
+    #   self._callback = callback
 
 
 class BoolRadios(ttk.Frame):
@@ -224,11 +245,10 @@ class CustomEntry(ttk.Entry):
     def __init__(self, master: tk.Misc) -> None:
         super().__init__(master=master)
 
-        self._callback: Callable[..., None] | None = None
+        bind_highlight_on_focus(widget=self)
 
-    def on_focus(self) -> None:
-        if self._callback:
-            _ = self.bind("<FocusIn>", self._callback)
+        self._callback: Callable[..., None] | None = None
 
     def bind_callback(self, callback: Callable[..., None]) -> None:
         self._callback = callback
+        _ = self.bind("<FocusIn>", lambda e: callback(), add="+")

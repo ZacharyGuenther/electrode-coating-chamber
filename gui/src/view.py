@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import Widget, ttk
-from typing import Any, Callable
 
 from gui.src.widgets import (
     BoolRadios,
@@ -8,6 +7,7 @@ from gui.src.widgets import (
     OnOffButton,
     SendButton,
     UnitsCombobox,
+    bind_highlight_on_focus,
     setup_styles,
 )
 
@@ -45,7 +45,7 @@ class TabBuilder(ttk.Frame):
 
             button: SendButton = SendButton(master=self)
             button.grid(column=3, row=row_index, sticky="ew", padx=padx, pady=pady)
-            button.bind_companion(companion=entry)
+            button.bind_companion(companion=entry, units=combobox)
 
             self.components[name] = {
                 "label": label,
@@ -63,18 +63,18 @@ class LinearTab(ttk.Frame):
         super().__init__(master=master)
 
         param_config: list[dict[str, str]] = [
-            {"name": "max_speed", "text": "Max Speed:", "type": "speed"},
-            {"name": "acceleration", "text": "Acceleration:", "type": "accel"},
-            {"name": "final_position", "text": "Final Position:", "type": "position"},
-            {"name": "abs_mov", "text": "Move to:", "type": "position"},
-            {"name": "rel_mov", "text": "Move:", "type": "position"},
+            {"name": "max", "text": "Max Speed:", "type": "speed"},
+            {"name": "acc", "text": "Acceleration:", "type": "accel"},
+            {"name": "end", "text": "Final Position:", "type": "position"},
+            {"name": "mtp", "text": "Move to:", "type": "position"},
+            {"name": "mov", "text": "Move:", "type": "position"},
         ]
 
         self.param_frame: TabBuilder = TabBuilder(master=self)
         self.param_frame.create(widget_data=param_config)
         self.param_frame.pack(expand=True)
 
-        temp_widgets: dict[str, Widget] = self.param_frame.components["abs_mov"]
+        temp_widgets: dict[str, Widget] = self.param_frame.components["mtp"]
         for widget in temp_widgets.values():
             widget.grid(pady=(30, 10))
 
@@ -95,15 +95,15 @@ class LinearTab(ttk.Frame):
         self.state_frame: ttk.Frame = ttk.Frame(master=self)
         self.state_frame.pack(side="bottom", pady=25)
 
-        self.set_home_button: SendButton = SendButton(
+        self.set_button: SendButton = SendButton(
             master=self.state_frame, text="Set Home"
         )
-        self.set_home_button.pack(side="left", padx=10)
+        self.set_button.pack(side="left", padx=10)
 
-        self.go_home_button: SendButton = SendButton(
+        self.hom_button: SendButton = SendButton(
             master=self.state_frame, text="Go Home"
         )
-        self.go_home_button.pack(side="left", padx=10)
+        self.hom_button.pack(side="left", padx=10)
 
         self.toggle_button: OnOffButton = OnOffButton(master=self.state_frame)
         self.toggle_button.pack(side="left", padx=10)
@@ -114,8 +114,8 @@ class RotationTab(ttk.Frame):
         super().__init__(master=master)
 
         param_config: list[dict[str, str]] = [
-            {"name": "max_speed", "text": "Max Speed:", "type": "speed"},
-            {"name": "speed", "text": "Speed:", "type": "speed"},
+            {"name": "max", "text": "Max Speed:", "type": "speed"},
+            {"name": "spd", "text": "Speed:", "type": "speed"},
         ]
 
         self.param_frame: TabBuilder = TabBuilder(master=self)
@@ -139,33 +139,23 @@ class SerialTab(ttk.Frame):
     def __init__(self, master: tk.Misc) -> None:
         super().__init__(master=master)
 
-        _ = self.columnconfigure(index=0, weight=1)
-        _ = self.columnconfigure(index=1, weight=1)
+        _ = self.columnconfigure((0, 1, 2, 3), weight=1)
 
-        self.port_var: tk.StringVar = tk.StringVar()
-        self.port_cb: ttk.Combobox = ttk.Combobox(
-            master=self,
-            textvariable=self.port_var,
-            state="normal",
-            font="Arial",
-            width=30,
+        self.mp1_label: ttk.Label = ttk.Label(master=self, text="Microprocessor 1:")
+        self.mp1_label.grid(row=0, column=0, sticky="e", padx=5, pady=(30, 10))
+
+        self.ports: list[str] = ["No USB ports available!"]
+        self.selected_port: tk.StringVar = tk.StringVar(value=self.ports[0])
+        self.port_options: ttk.Combobox = ttk.Combobox(
+            master=self, textvariable=self.selected_port, state="normal"
         )
-        self.port_cb.grid(row=0, column=0, columnspan=2, pady=(30, 10))
+        self.port_options.grid(row=0, column=1, sticky="ew", padx=5, pady=(30, 10))
+        bind_highlight_on_focus(widget=self.port_options)
 
-        self.disconnect_btn: ttk.Button = ttk.Button(master=self, text="Disconnect")
-        self.disconnect_btn.grid(row=1, column=0, columnspan=2, pady=10)
+        self.connect_btn: SendButton = SendButton(master=self, text="Connect")
+        self.connect_btn.grid(row=0, column=2, sticky="w", padx=5, pady=(30, 10))
 
-    def update_port_list(self, port_labels: list[str]) -> None:
-        current_values: list[Any] = list[Any](self.port_cb["values"])
-        if current_values != port_labels:
-            self.port_cb["values"] = port_labels
-
-    def bind_connect_events(self, callback: Callable[[str], None]) -> None:
-        def on_trigger(_event: tk.Event) -> None:
-            callback(self.port_var.get())
-
-        _ = self.port_cb.bind("<<ComboboxSelected>>", on_trigger)
-        _ = self.port_cb.bind("<Return>", on_trigger)
+        self.connect_btn.bind_companion(companion=self.port_options)
 
 
 ################################################
@@ -183,3 +173,6 @@ class View(ttk.Notebook):
 
         self.rotation_tab: RotationTab = RotationTab(master=self)
         self.add(child=self.rotation_tab, text="Substrate Rotation")
+
+        self.serial_tab: SerialTab = SerialTab(master=self)
+        self.add(child=self.serial_tab, text="Serial Interface")

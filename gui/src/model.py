@@ -1,156 +1,121 @@
 from queue import Full, Queue
+from typing import Any, Callable
+
+from typing_extensions import Self  # pyright: ignore[reportMissingModuleSource]
+
+
+class QueueProperty:
+    def __init__(self, private_name: str) -> None:
+        self.private_name: str = private_name
+        self.public_name: str = ""
+
+    def __set_name__(self, owner: Any, name: str) -> None:  # pyright: ignore[reportAny, reportExplicitAny]
+        self.public_name = name.upper()
+
+    def __get__(self, instance: Any, owner: Any) -> Self | Any:  # pyright: ignore[reportAny, reportExplicitAny]
+        if instance is None:
+            return self
+        return getattr(instance, self.private_name, None)  # pyright: ignore[reportAny]
+
+    def __set__(self, instance: Any, value: int | float) -> None:  # pyright: ignore[reportAny, reportExplicitAny]
+        setattr(instance, self.private_name, value)  # pyright: ignore[reportAny]
+        full_prefix: str = f"{instance.prefix}_{self.public_name}"  # pyright: ignore[reportAny]
+        instance._send_to_queue(cmd_prefix=full_prefix, value=value)  # pyright: ignore[reportAny]
+
+
+class StepperMotor:
+    max: QueueProperty = QueueProperty(private_name="_max")
+    spd: QueueProperty = QueueProperty(private_name="_spd")
+    acc: QueueProperty = QueueProperty(private_name="_acc")
+    end: QueueProperty = QueueProperty(private_name="_end")
+    mov: QueueProperty = QueueProperty(private_name="_mov")
+    mtp: QueueProperty = QueueProperty(private_name="_mtp")
+    mta: QueueProperty = QueueProperty(private_name="_mta")
+
+    def __init__(
+        self, queue: Queue[str], prefix: str, spr: float = 0.0, spmm: float = 10000.0
+    ) -> None:
+        self.outbox: Queue[str] = queue
+        self.prefix: str = prefix.upper()
+
+        self._max: float = 0.0
+        self._spd: float = 0.0
+        self._acc: float = 0.0
+        self._end: int = 0
+        self._mov: int = 0
+        self._mtp: int = 0
+        self._mta: int = 0
+
+        self.dir: int = 1
+        self.is_on: bool = False
+
+        self.stgd_max: float = 0.0
+        self.stgd_spd: float = 0.0
+        self.stgd_acc: float = 0.0
+        self.stgd_end: int = 0
+        self.stgd_mov: int = 0
+        self.stgd_mtp: int = 0
+        self.stgd_mta: int = 0
+
+        # SPR = steps per revolution
+        # SPMM = steps per millimeter
+        # MMPR = millimeter per revolution
+        self.SPR: float = spr
+        self.SPMM: float = spmm
+        self.MMPR: float = self.SPR / self.SPMM
+
+        self.conv_factors: dict[str, float] = {
+            "mm": self.SPMM,
+            "cm": (self.SPMM * 10.0),  # 10 mm/cm
+            "step": 1.0,
+            "RPM": (self.SPR / 60),
+            "step/s": 1.0,
+            "RPM/s": (self.SPR / 60),
+            "step/s\u00b2": 1.0,
+        }
+
+    def _send_to_queue(self, cmd_prefix: str, value: float | int) -> None:
+        try:
+            arduino_cmd: str = f"{cmd_prefix}={value}\n"
+            self.outbox.put_nowait(item=arduino_cmd)
+        except Full:
+            print("Queue is full!")
+
+    def set_home(self, value: int | float = 0) -> None:
+        full_prefix: str = f"{self.prefix}_SET"
+        self._send_to_queue(cmd_prefix=full_prefix, value=value)
+
+    def go_home(self, value: int | float = 0) -> None:
+        full_prefix: str = f"{self.prefix}_HOM"
+        self._send_to_queue(cmd_prefix=full_prefix, value=value)
+
+    def reset(self, value: int | float = 0) -> None:
+        full_prefix: str = f"{self.prefix}_RST"
+        self._send_to_queue(cmd_prefix=full_prefix, value=value)
+
+    def reset_board(self, value: int | float = 0) -> None:
+        self._send_to_queue(cmd_prefix="RESET", value=value)
 
 
 class Model:
     def __init__(self, queue: Queue[str]) -> None:
-        self.queue: Queue[str] = queue
-        self.available_ports: list[str] = []
+        self._ports: list[str] = []
+        self._port_callback: Callable[[list[str]], None] | None = None
 
-        self._s1_max: float = 0.0
-        self._s1_spd: float = 0.0
+        self.s1: StepperMotor = StepperMotor(queue=queue, spr=200, prefix="S1")
+        self.s2: StepperMotor = StepperMotor(
+            queue=queue, spr=400, spmm=900, prefix="S2"
+        )
 
-        self._s2_max: float = 0.0
-        self._s2_acc: float = 0.0
-        self._s2_end: int = 0
-        self._s2_mov: int = 0
-        self._s2_mtp: int = 0
-        self._s2_mta: int = 0
-
-        self.s1_is_on: bool = False
-        self.s1_dir: int = 1
-
-        self.s2_is_on: bool = False
-        self.s2_dir: int = 1
-
-        self.stgd_s1_max: float = 0.0
-        self.stgd_s1_spd: float = 0.0
-
-        self.stgd_s2_max: float = 0.0
-        self.stgd_s2_acc: float = 0.0
-        self.stgd_s2_end: int = 0
-        self.stgd_s2_mov: int = 0
-        self.stgd_s2_mtp: int = 0
-        self.stgd_s2_mta: int = 0
-
-        self.S1_SPR: float = 200.0
-        self.S2_SPR: float = 400.0
-        self.S2_MMPR: float = 8.0
-
-        self.unit_conversions: dict[str, dict[str, float]] = {
-            "s1": {
-                "RPM": (1.0 / 60.0) * self.S1_SPR,
-                "step/s": 1.0,
-            },
-            "s2": {
-                "mm": self.S2_SPR / self.S2_MMPR,
-                "cm": (self.S2_SPR / self.S2_MMPR) * 10.0,
-                "step": 1.0,
-                "RPM": (1.0 / 60.0) * self.S2_SPR,
-                "step/s": 1.0,
-                "RPM/s": (1.0 / 60.0) * self.S2_SPR,
-                "step/s\u00b2": 1.0,
-            },
-        }
-
-    ################################################
-    # Stepper 2 Properties
-    ################################################
-    def _send_to_queue(self, cmd_prefix: str, value: float | int) -> None:
-        try:
-            arduino_cmd: str = f"{cmd_prefix}={value}\n"
-            self.queue.put_nowait(item=arduino_cmd)
-        except Full:
-            print("Queue is full!")
-
-    ################################################
-    # Stepper 1 Properties
-    ################################################
-    @property
-    def s1_max(self) -> float:
-        return self._s1_max
-
-    @s1_max.setter
-    def s1_max(self, value: float) -> None:
-        self._s1_max = value
-        self._send_to_queue(cmd_prefix="S1_MAX", value=value)
+    def bind_port_update(self, callback: Callable[[list[str]], None]) -> None:
+        self._port_callback = callback
 
     @property
-    def s1_spd(self) -> float:
-        return self._s1_spd
+    def ports(self) -> list[str]:
+        return self._ports
 
-    @s1_spd.setter
-    def s1_spd(self, value: float) -> None:
-        self._s1_spd = value
-        self._send_to_queue(cmd_prefix="S1_SPD", value=value)
-
-    ################################################
-    # Stepper 2 Properties
-    ################################################
-    @property
-    def s2_max(self) -> float:
-        return self._s2_max
-
-    @s2_max.setter
-    def s2_max(self, value: float) -> None:
-        self._s2_max = value
-        self._send_to_queue(cmd_prefix="S2_MAX", value=value)
-
-    @property
-    def s2_acc(self) -> float:
-        return self._s2_acc
-
-    @s2_acc.setter
-    def s2_acc(self, value: float) -> None:
-        self._s2_acc = value
-        self._send_to_queue(cmd_prefix="S2_ACC", value=value)
-
-    @property
-    def s2_end(self) -> int:
-        return self._s2_end
-
-    @s2_end.setter
-    def s2_end(self, value: int) -> None:
-        self._s2_end = value
-        self._send_to_queue(cmd_prefix="S2_END", value=value)
-
-    @property
-    def s2_mov(self) -> int:
-        return self._s2_mov
-
-    @s2_mov.setter
-    def s2_mov(self, value: int) -> None:
-        self._s2_mov = value
-        self._send_to_queue(cmd_prefix="S2_MOV", value=value)
-
-    @property
-    def s2_mtp(self) -> int:
-        return self._s2_mtp
-
-    @s2_mtp.setter
-    def s2_mtp(self, value: int) -> None:
-        self._s2_mtp = value
-        self._send_to_queue(cmd_prefix="S2_MTP", value=value)
-
-    @property
-    def s2_mta(self) -> int:
-        return self._s2_mta
-
-    @s2_mta.setter
-    def s2_mta(self, value: int) -> None:
-        self._s2_mta = value
-        self._send_to_queue(cmd_prefix="S2_MTA", value=value)
-
-    ################################################
-    # Non-Value Functions
-    ################################################
-    def s2_set_home(self) -> None:
-        self._send_to_queue(cmd_prefix="S2_SET", value=0)
-
-    def s2_go_home(self) -> None:
-        self._send_to_queue(cmd_prefix="S2_HOM", value=0)
-
-    def s2_reset(self) -> None:
-        self._send_to_queue(cmd_prefix="S2_RST", value=0)
-
-    def reset_board(self) -> None:
-        self._send_to_queue(cmd_prefix="RESET", value=0)
+    @ports.setter
+    def ports(self, new_ports: list[str]) -> None:
+        self._ports = new_ports
+        if self._port_callback is not None:
+            self._port_callback(self._ports)
