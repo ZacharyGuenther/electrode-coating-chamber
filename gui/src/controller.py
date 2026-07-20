@@ -133,9 +133,7 @@ class Controller(ttk.Frame):
             else:
                 target_func = self.send_pos
 
-            button.bind_callback(
-                callback=partial(target_func, parameter=name, motor=motor)
-            )
+            button.bind_callback(callback=partial(target_func, name, motor))
 
     def bind_linear_tab(self) -> None:
         components: dict[str, dict[str, Widget]] = (
@@ -144,7 +142,7 @@ class Controller(ttk.Frame):
         self._bind_components(motor="s2", components=components)
 
         dir_rad: BoolRadios = self.view.linear_tab.dir_rad
-        dir_rad.bind_callback(callback=partial(self.radio_callback, motor="s2"))
+        dir_rad.bind_callback(callback=partial(self.radio_callback, "s2"))
 
         set_btn: SendButton = self.view.linear_tab.set_button
         set_btn.bind_callback(callback=self.model.s2.set_home)
@@ -153,7 +151,7 @@ class Controller(ttk.Frame):
         hom_btn.bind_callback(callback=self.model.s2.go_home)
 
         is_on_btn: OnOffButton = self.view.linear_tab.toggle_button
-        is_on_btn.bind_callback(callback=partial(self.on_off_callback, motor="s2"))
+        is_on_btn.bind_callback(callback=partial(self.on_off_callback, "s2"))
 
     def bind_rotation_tab(self) -> None:
         components: dict[str, dict[str, Widget]] = (
@@ -162,10 +160,10 @@ class Controller(ttk.Frame):
         self._bind_components(motor="s1", components=components)
 
         dir_rad: BoolRadios = self.view.rotation_tab.dir_rad
-        dir_rad.bind_callback(callback=partial(self.radio_callback, motor="s1"))
+        dir_rad.bind_callback(callback=partial(self.radio_callback, "s1"))
 
         is_on_btn: OnOffButton = self.view.rotation_tab.toggle_button
-        is_on_btn.bind_callback(callback=partial(self.on_off_callback, motor="s1"))
+        is_on_btn.bind_callback(callback=partial(self.on_off_callback, "s1"))
 
     def bind_serial_tab(self) -> None:
         connect_btn: SendButton = self.view.serial_tab.connect_btn
