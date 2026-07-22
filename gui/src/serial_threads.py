@@ -6,7 +6,7 @@ import serial
 import serial.tools.list_ports
 from gui.src.model import Model
 from serial.tools.list_ports_common import ListPortInfo
-from typing_extensions import override  # pyright: ignore[reportMissingModuleSource]
+from typing_extensions import override
 
 
 class SerialWorker(threading.Thread):
