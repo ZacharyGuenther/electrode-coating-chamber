@@ -1,0 +1,15 @@
+@startuml control_sequence
+skinparam maxmessagesize 150
+actor User
+participant "View" as V
+participant "Controller" as C
+participant "Model" as M
+participant "Serial Manager" as ser
+participant "Microprocessor" as mp
+
+User -> V : 1. Enters data and hits "Send"
+V -> C : 2. Forwards user input
+C -> M : 3. Cleans data from View and connects to Model
+M -> ser : 4 . Formats data to command string
+ser -> mp : 5. Automatically sends all command strings
+@enduml
