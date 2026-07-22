@@ -1,7 +1,7 @@
 from queue import Full, Queue
 from typing import Any, Callable
 
-from typing_extensions import Self  # pyright: ignore[reportMissingModuleSource]
+from typing_extensions import Self
 
 
 class QueueProperty:

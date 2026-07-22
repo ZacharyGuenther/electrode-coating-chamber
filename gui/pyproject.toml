@@ -1,6 +1,6 @@
 [project]
 name = "electrode-coating-chamber"
-version = "0.1.0"
+version = "1.0.0a2"
 description = "The GUI and Serial Monitor component of the two stepper system of the Electrode chamber."
 readme = "README.md"
 requires-python = ">=3.10"
