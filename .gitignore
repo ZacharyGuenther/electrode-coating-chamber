@@ -19,3 +19,7 @@ gui/.venv/
 
 gui/src/__pycache__
 gui/src/*.pyc
+
+
+gui/__pycache__
+gui/*.pyc
