@@ -18,14 +18,39 @@ class SerialWorker(threading.Thread):
         self.outbox: Queue[str] = outbox
 
         self._stop_event: threading.Event = threading.Event()
+        self._connection_lock: threading.Lock = threading.Lock()
         self.connection: serial.Serial | None = None
 
         self.write_delay: float = 0.05
         self.port_check_delay: float = 1.0
 
+    def connect(
+        self, port: str, baudrate: int = 115200, timeout: float = 0.05
+    ) -> str | None:
+        with self._connection_lock:
+            if self.connection is not None and self.connection.is_open:
+                self.connection.close()
+            try:
+                self.connection = serial.Serial(
+                    port=port, baudrate=baudrate, timeout=timeout
+                )
+                return None
+            except serial.SerialException as e:
+                self.connection = None
+                return str(e)
+
+    def disconnect(self) -> None:
+        with self._connection_lock:
+            if self.connection is not None and self.connection.is_open:
+                self.connection.close()
+            self.connection = None
+
+    def is_connected(self) -> bool:
+        with self._connection_lock:
+            return self.connection is not None and self.connection.is_open
+
     @override
     def run(self) -> None:
-
         last_port_check: float = 0.0
         last_write_time: float = 0.0
 
@@ -36,10 +61,13 @@ class SerialWorker(threading.Thread):
                 self._update_ports()
                 last_port_check = now
 
-            if self.connection is not None and self.connection.is_open:
+            with self._connection_lock:
+                connection: serial.Serial | None = self.connection
+
+            if connection is not None and connection.is_open:
                 try:
-                    if self.connection.in_waiting > 0:
-                        incoming_bytes: bytes = self.connection.readline()
+                    if connection.in_waiting > 0:
+                        incoming_bytes: bytes = connection.readline()
                         incoming_str: str = incoming_bytes.decode(
                             encoding="ascii", errors="ignore"
                         ).strip()
@@ -53,14 +81,16 @@ class SerialWorker(threading.Thread):
                     if now - last_write_time >= self.write_delay:
                         try:
                             cmd: str = self.outbox.get_nowait()
-                            _ = self.connection.write(cmd.encode(encoding="ascii"))
+                            _ = connection.write(cmd.encode(encoding="ascii"))
                             last_write_time = now
                         except Empty:
                             pass
 
                 except serial.SerialException:
-                    self.connection.close()
-                    self.connection = None
+                    with self._connection_lock:
+                        if self.connection is connection:
+                            connection.close()
+                            self.connection = None
 
             time.sleep(0.01)
 
@@ -69,10 +99,8 @@ class SerialWorker(threading.Thread):
         usb_ports: list[str] = []
         for port in all_ports:
             if port.vid is not None:
-                usb_ports = [port.device]
-        # Consider having this go to the inbox and having the controller set the values
-        # in Model. Shouldn't cause a race condition for now because the GUI is updated
-        # via a setter method of this variable.
+                usb_ports.append(port.device)
+
         if usb_ports != self.model.ports:
             self.model.ports = usb_ports
 
