@@ -77,7 +77,7 @@ class StepperMotor:
     def _send_to_queue(self, cmd_prefix: str, value: float | int) -> None:
         try:
             arduino_cmd: str = f"{cmd_prefix}={value}\n"
-            print(f"-> Sent to Queue: {arduino_cmd.strip()}")
+            print(f"Sent to Queue: {arduino_cmd.strip()}")
             self.outbox.put_nowait(item=arduino_cmd)
         except Full:
             print("Queue is full!")
