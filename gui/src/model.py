@@ -49,13 +49,13 @@ class StepperMotor:
         self.dir: int = 1
         self.is_on: bool = False
 
-        self.stgd_max: float = 0.0
-        self.stgd_spd: float = 0.0
-        self.stgd_acc: float = 0.0
-        self.stgd_end: int = 0
-        self.stgd_mov: int = 0
-        self.stgd_mtp: int = 0
-        self.stgd_mta: int = 0
+        self.stgd_max: float | None = None
+        self.stgd_spd: float | None = None
+        self.stgd_acc: float | None = None
+        self.stgd_end: int | None = None
+        self.stgd_mov: int | None = None
+        self.stgd_mtp: int | None = None
+        self.stgd_mta: int | None = None
 
         # SPR = steps per revolution
         # SPMM = steps per millimeter

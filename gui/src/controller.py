@@ -115,11 +115,12 @@ class Controller(ttk.Frame):
                 ]
 
                 for param in parameters:
-                    staged_val: float = cast(
-                        float, getattr(target_motor, f"stgd_{param}")
-                    )
-                    if staged_val != 0:
+                    staged_val: int | float | None = cast(
+                        int | float | None, getattr(target_motor, f"stgd_{param}")
+                        )
+                    if staged_val is not None:
                         setattr(target_motor, param, staged_val)
+                        setattr(target_motor, f"stgd_{param}", None)
 
     def _bind_components(
         self, motor: str, components: dict[str, dict[str, Widget]]
