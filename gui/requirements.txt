@@ -1,0 +1,4 @@
+ruff
+basedpyright
+pyserial
+typing_extensions
