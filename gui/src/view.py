@@ -108,6 +108,11 @@ class LinearTab(ttk.Frame):
         self.toggle_button: OnOffButton = OnOffButton(master=self.state_frame)
         self.toggle_button.pack(side="left", padx=10)
 
+        self.stop_button: SendButton = SendButton(
+            master=self.state_frame, text="STOP"
+        )
+        self.stop_button.pack(side="left", padx=10)
+
 
 class RotationTab(ttk.Frame):
     def __init__(self, master: tk.Misc) -> None:
@@ -127,9 +132,17 @@ class RotationTab(ttk.Frame):
         )
         self.dir_rad.grid(row=2, column=1, columnspan=2)
 
-        self.toggle_button: OnOffButton = OnOffButton(master=self.param_frame)
-        self.toggle_button.grid(column=1, columnspan=2, row=3, pady=50)
 
+        self.state_frame: ttk.Frame = ttk.Frame(master=self)
+        self.state_frame.pack(side="bottom", pady=25)
+
+        self.toggle_button: OnOffButton = OnOffButton(master=self.state_frame)
+        self.toggle_button.pack(side="left", padx=10)
+
+        self.stop_button: SendButton = SendButton(
+            master=self.state_frame, text="STOP"
+        )
+        self.stop_button.pack(side="left", padx=10)
 
 class MirrorTab(ttk.Frame):
     pass

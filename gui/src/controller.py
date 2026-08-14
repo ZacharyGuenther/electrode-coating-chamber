@@ -154,6 +154,9 @@ class Controller(ttk.Frame):
         is_on_btn: OnOffButton = self.view.linear_tab.toggle_button
         is_on_btn.bind_callback(callback=partial(self.on_off_callback, "s2"))
 
+        stop_btn: SendButton = self.view.linear_tab.stop_button
+        stop_btn.bind_callback(callback=self.model.s2.reset_board)
+
     def bind_rotation_tab(self) -> None:
         components: dict[str, dict[str, Widget]] = (
             self.view.rotation_tab.param_frame.components
@@ -165,6 +168,9 @@ class Controller(ttk.Frame):
 
         is_on_btn: OnOffButton = self.view.rotation_tab.toggle_button
         is_on_btn.bind_callback(callback=partial(self.on_off_callback, "s1"))
+
+        stop_btn: SendButton = self.view.rotation_tab.stop_button
+        stop_btn.bind_callback(callback=self.model.s1.reset_board)
 
     def bind_serial_tab(self) -> None:
         connect_btn: SendButton = self.view.serial_tab.connect_btn
