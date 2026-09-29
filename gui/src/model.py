@@ -1,7 +1,7 @@
 from queue import Full, Queue
 from typing import Any, Callable
 
-from typing_extensions import Self
+from typing_extensions import Self  # pyright: ignore[reportMissingModuleSource]
 
 S1_LIMITS: dict[str, tuple[float, float]] = {
     "max": (0.0, 3000.0),
@@ -34,8 +34,10 @@ class QueueProperty:
     def __set__(self, instance: Any, value: int | float) -> None:  # pyright: ignore[reportAny, reportExplicitAny]
         limit_key: str = self.private_name.lstrip("_")
         limits: dict[str, tuple[float, float] | tuple[int, int]] = getattr(
-            instance, "limits", {} # pyright: ignore[reportAny]
-            )
+            instance,  # pyright: ignore[reportAny]
+            "limits",
+            {},
+        )
         bounds: tuple[float, float] | tuple[int, int] | None = limits.get(limit_key)
 
         if bounds is not None:
@@ -43,7 +45,7 @@ class QueueProperty:
             if value < low or value > high:
                 clamped_value: float | int = type(value)(max(low, min(high, value)))
                 print(
-                    f"WARNING: {instance.prefix}.{limit_key} " # pyright: ignore[reportAny]
+                    f"WARNING: {instance.prefix}.{limit_key} "  # pyright: ignore[reportAny]
                     + f"requested {value} is outside "
                     + f"allowed range [{low}, {high}]. Clamped to {clamped_value}."
                 )
@@ -107,9 +109,9 @@ class StepperMotor:
             "step/s\u00b2": 1.0,
         }
 
-        self.limits: dict[
+        self.limits: dict[str, tuple[float, float] | tuple[int, int]] = dict[
             str, tuple[float, float] | tuple[int, int]
-        ] = dict[str, tuple[float, float] | tuple[int, int]](limits or {})
+        ](limits or {})
 
     def _send_to_queue(self, cmd_prefix: str, value: float | int) -> None:
         try:
@@ -138,10 +140,10 @@ class Model:
         self._port_callback: Callable[[list[str]], None] | None = None
 
         self.s1: StepperMotor = StepperMotor(
-            queue=queue, spr=200, prefix="S1", limits=S1_LIMITS
+            queue=queue, spr=400, prefix="S1", limits=S1_LIMITS
         )
         self.s2: StepperMotor = StepperMotor(
-            queue=queue, spr=400, mmpr=60, prefix="S2", limits=S2_LIMITS
+            queue=queue, spr=200, mmpr=60, prefix="S2", limits=S2_LIMITS
         )
 
     def bind_port_update(self, callback: Callable[[list[str]], None]) -> None:
