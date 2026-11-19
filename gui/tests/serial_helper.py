@@ -1,3 +1,6 @@
+# This file does not work. The idea was to move towards "production ready code"
+# that uses test files like this, but I ran out of time.
+
 import time
 from queue import Queue
 from threading import Thread
